@@ -2,6 +2,7 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.http import JsonResponse
 from .forms import OrderForm
 from .models import Product, BasketItem
+from django.views.decorators.http import require_POST
 
 def home(request):
     return render(request, 'products/home.html')  
@@ -26,51 +27,43 @@ def order_product(request):
     
     return render(request, 'products/order_product.html', {'form': form, 'product': product})
 
+@require_POST
 def add_to_basket(request, product_id):
+    quantity = int(request.POST.get('quantity', 1))
     product = get_object_or_404(Product, id=product_id)
-    quantity = int(request.POST.get('quantity', 1))  # Get quantity from form or default to 1
 
-    # Use a session to store basket items for unauthenticated users
-    basket = request.session.get('basket', {})
+    # Initialize the basket in the session if it doesn't exist
+    if 'basket' not in request.session:
+        request.session['basket'] = {}
 
-    # If the product is already in the basket, update the quantity
-    if str(product_id) in basket:
-        basket[str(product_id)] += quantity
+    # Update the quantity of the product in the basket
+    if str(product.id) in request.session['basket']:
+        request.session['basket'][str(product.id)] += quantity
     else:
-        basket[str(product_id)] = quantity
+        request.session['basket'][str(product.id)] = quantity
 
-    # Save the updated basket back to the session
-    request.session['basket'] = basket
+    # Save the session
+    request.session.modified = True
 
-    # Return a JSON response with the updated basket
-    return JsonResponse({
-        'success': True,
-        'message': f'Added {quantity} of {product.name} to the basket.',
-        'basket': basket  # Optionally return the updated basket
-    })
+    return JsonResponse({'success': True, 'message': 'Product added to basket!', 'quantity': request.session['basket'][str(product.id)]})
+
 def view_basket(request):
     basket = request.session.get('basket', {})
     basket_items = []
+    total_amount = 0.0  # Initialize total amount as a float
 
     # Retrieve product details for each item in the basket
     for product_id, quantity in basket.items():
         product = get_object_or_404(Product, id=product_id)
         basket_items.append({'product': product, 'quantity': quantity})
+        
+        # Convert product price to float and calculate total amount
+        total_amount += float(product.price) * quantity  # Convert to float
 
-    if request.method == 'POST':
-        form = OrderForm(request.POST)
-        if form.is_valid():
-            order = form.save(commit=False)
-            order.user = request.user  # Assuming you want to associate the order with the user
-            order.save()
-            # Clear the basket after placing the order
-            request.session['basket'] = {}
-            return render(request, 'products/order_confirmation.html', {'order': order})
-    else:
-        form = OrderForm()
-
-    return render(request, 'products/basket.html', {'basket_items': basket_items, 'form': form})
-
+    return render(request, 'products/basket.html', {
+        'basket_items': basket_items,
+        'total_amount': total_amount,
+    })
 
 def place_order(request):
     if request.user.is_authenticated:

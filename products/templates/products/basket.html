@@ -10,6 +10,8 @@
     <div>
         {% for item in basket_items %}
             <p>{{ item.product.name }} - Quantity: {{ item.quantity }}</p>
+        {% empty %}
+            <p>Your basket is empty.</p>
         {% endfor %}
     </div>
 

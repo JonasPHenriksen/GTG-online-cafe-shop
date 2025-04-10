@@ -18,12 +18,16 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
-from products.views import home
+from products.views import home, add_to_basket, view_basket, place_order
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('products/', include('products.urls')),
+    path('add_to_basket/<int:product_id>/', add_to_basket, name='add_to_basket'),  
+    path('basket/', view_basket, name='basket'),
+    path('place_order/', place_order, name='place_order'),
     path('', home, name='home'),  
+    path('view_basket/', view_basket, name='view_basket'),  # Ensure this line exists
 ]
 
 

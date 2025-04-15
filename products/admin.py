@@ -6,9 +6,14 @@ admin.site.register(Category)
 
 class OrderItemInline(admin.TabularInline):
     model = OrderItem
-    extra = 1  # Number of empty forms to display
+    extra = 0  # No extra empty forms
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ('user', 'created_at')  # Display user and created_at fields
-    inlines = [OrderItemInline]  # Include the OrderItem inline
+    list_display = ('user', 'created_at', 'status')
+    list_filter = ('status',)
+    inlines = [OrderItemInline]
+
+    # Optional: You can add search fields, ordering, etc.
+    search_fields = ('user',)
+    ordering = ('-created_at',)

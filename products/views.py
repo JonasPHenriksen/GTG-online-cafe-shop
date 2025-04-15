@@ -1,7 +1,7 @@
 from django.shortcuts import get_object_or_404, render, redirect
 from django.http import JsonResponse
 from .forms import OrderForm
-from .models import Product, BasketItem
+from .models import Product, BasketItem, Order, OrderItem
 from django.views.decorators.http import require_POST
 
 def home(request):
@@ -66,12 +66,37 @@ def view_basket(request):
     })
 
 def place_order(request):
-    if request.user.is_authenticated:
-        basket_items = BasketItem.objects.filter(user=request.user)
-        # Here you would typically create an Order model and save the order details
+    if not request.user.is_authenticated:
+        return redirect('login')  # Redirect if not logged in
 
-        # Clear the basket after placing the order
-        basket_items.delete()
-        return render(request, 'products/order_confirmation.html')
-    else:
-        return redirect('login')  # Redirect to login if not authenticated
+    if request.method == 'POST':
+        order_name = request.POST.get('order_name')  # Get the name from the form
+
+        if order_name:
+            # Check session for basket items (no need for BasketItem model here)
+            basket = request.session.get('basket', {})
+
+            if basket:
+                # Create the order with status 'in_progress' and name from the form
+                order = Order.objects.create(
+                    user=request.user.username,  # Store the username
+                    name=order_name,  # Name provided by the user
+                    status='in_progress'  # Default status
+                )
+
+                # Create OrderItem instances for each item in the session basket
+                for product_id, quantity in basket.items():
+                    product = Product.objects.get(id=product_id)
+                    OrderItem.objects.create(order=order, product=product, quantity=quantity)
+
+                # Clear the basket from the session after placing the order
+                request.session['basket'] = {}
+
+                # Redirect to the order confirmation page
+                return render(request, 'products/order_confirmation.html', {'user_name': request.user.username})
+
+            # If no name is provided or the basket is empty, redirect to the basket page
+            return redirect('view_basket')
+
+        return redirect('view_basket')  # Handle non-POST requests
+

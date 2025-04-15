@@ -18,10 +18,13 @@ class Product(models.Model):
 
 class Order(models.Model):
     user = models.CharField(max_length=150)  # Store the username as a string
+    name = models.CharField(max_length=200)  # Name of the person placing the order
     created_at = models.DateTimeField(auto_now_add=True)  # Timestamp for when the order was created
+    status = models.CharField(max_length=20, default='in_progress')  # Add a status field (default 'in_progress')
 
     def __str__(self):
         return f"Order {self.id} by {self.user}"
+
 
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, related_name='items', on_delete=models.CASCADE)  # Link to the Order

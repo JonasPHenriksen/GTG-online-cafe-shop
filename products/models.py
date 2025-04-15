@@ -29,6 +29,7 @@ class Order(models.Model):
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, related_name='items', on_delete=models.CASCADE)  # Link to the Order
     product = models.ForeignKey(Product, on_delete=models.CASCADE)  # Link to the Product
+    size = models.CharField(max_length=50)  # Add the size field
     quantity = models.PositiveIntegerField(default=1)  # Store the quantity of the product
 
     def __str__(self):

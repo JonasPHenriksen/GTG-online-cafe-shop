@@ -10,10 +10,10 @@
     <div>
         {% for item in basket_items %}
         <p>{{ item.product.name }} - Size: {{ item.size }} - Quantity: {{ item.quantity }} - Price: ${{ item.price }} - Total: ${{ item.total_price }}
-            <form action="{% url 'remove_from_basket' item.product.id %}" method="post">
+            <form action="{% url 'remove_from_basket' item.product.id item.size|default:'regular' %}" method="post">
                 {% csrf_token %}
-                <button type="submit">Remove</button>
-            </form>
+                <button type="submit" class="remove-button">Remove</button>
+            </form>                             
         </p>
         {% empty %}
             <p>Your basket is empty.</p>

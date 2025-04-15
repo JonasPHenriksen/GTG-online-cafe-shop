@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Product List</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -113,15 +112,61 @@
         </div>
     </div>
 
+    <div class="container">
+        <div class="product-grid">
+            {% for product in drinks %}
+                <div class="product">
+                    <h2>{{ product.name }}</h2>
+                    <p>{{ product.description }}</p>
+                    <p class="price">Price: ${{ product.price }}</p>
+                    <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                    <button class="order-button open-popup" data-product-id="{{ product.id }}">Add to Basket</button>
+                    <!-- Popup for Drinks -->
+                    <div class="popup" id="popup-{{ product.id }}">
+                        <div class="popup-content">
+                            <span class="close-popup">&times;</span>
+                            <h3>Add {{ product.name }} to Basket</h3>
+                            <form class="add-to-basket-form" action="{% url 'add_to_basket' product.id %}" method="post">
+                                {% csrf_token %}
+                                <label for="size">Size:</label>
+                                <select name="size" id="size">
+                                    <option value="small">Small (+$0.50)</option>
+                                    <option value="medium">Medium (+$1.00)</option>
+                                    <option value="large">Large (+$1.50)</option>
+                                </select>
+                                <input type="number" name="quantity" class="quantity-input" value="1" min="1">
+                                <button type="submit" class="order-button">Add to Basket</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+    
+            {% for product in others %}
+                <div class="product">
+                    <h2>{{ product.name }}</h2>
+                    <p>{{ product.description }}</p>
+                    <p class="price">Price: ${{ product.price }}</p>
+                    <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                    <form class="add-to-basket-form" action="{% url 'add_to_basket' product.id %}" method="post">
+                        {% csrf_token %}
+                        <input type="number" name="quantity" class="quantity-input" value="1" min="1">
+                        <button type="submit" class="order-button">Add to Basket</button>
+                    </form>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         $(document).ready(function() {
             $('.add-to-basket-form').on('submit', function(event) {
                 event.preventDefault(); // Prevent the default form submission
-
+    
                 var form = $(this);
                 var url = form.attr('action');
                 var data = form.serialize(); // Serialize the form data
-
+    
                 $.post(url, data, function(response) {
                     // Handle the response here
                     alert('Product added to basket!'); // You can customize this
@@ -130,6 +175,47 @@
                     alert('Error adding product to basket.');
                 });
             });
+    
+            // Open the popup when the "Add to Basket" button is clicked
+            $('.open-popup').click(function() {
+                var productId = $(this).data('product-id');
+                $('#popup-' + productId).css('display', 'block');
+            });
+    
+            // Close the popup when the close button is clicked
+            $('.close-popup').click(function() {
+                var productId = $(this).closest('.popup').attr('id').replace('popup-', '');
+                $('#popup-' + productId).css('display', 'none');
+            });
+    
+            // Handle the form submission for adding drinks to the basket
+            $('.add-to-basket-form').on('submit', function(event) {
+                event.preventDefault(); // Prevent the default form submission
+    
+                var form = $(this);
+                var url = form.attr('action');
+                var data = form.serialize(); // Serialize the form data
+    
+                $.post(url, data, function(response) {
+
+                    // Close the popup
+                    var productId = form.closest('.popup').attr('id').replace('popup-', '');
+                    $('#popup-' + productId).css('display', 'none');
+    
+                    // Update the basket total
+                    updateBasketTotal();
+                }).fail(function() {
+                    alert('Error adding product to basket.');
+                });
+            });
+    
+            function updateBasketTotal() {
+                // Retrieve the basket items from the server
+                $.get('{% url "view_basket" %}', function(data) {
+                    // Update the total amount display
+                    $('.total-amount').text('Total: $' + data.total_amount.toFixed(2));
+                });
+            }
         });
     </script>
 </body>

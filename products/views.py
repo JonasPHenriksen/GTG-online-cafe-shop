@@ -1,15 +1,38 @@
 from django.shortcuts import get_object_or_404, render, redirect
 from django.http import JsonResponse
 from .forms import OrderForm
-from .models import Product, BasketItem, Order, OrderItem
+from .models import Product, Order, OrderItem, Category
 from django.views.decorators.http import require_POST
 
 def home(request):
     return render(request, 'products/home.html')  
 
 def product_list(request):
-    products = Product.objects.all()
-    return render(request, 'products/product_list.html', {'products': products})
+    category_id = request.GET.get('category', None)
+    categories = Category.objects.all()
+
+    # If "All" is selected (empty string), treat it as None
+    if category_id == '':
+        category_id = None
+        selected_category = None
+    else:
+        try:
+            selected_category = Category.objects.get(id=category_id)
+        except Category.DoesNotExist:
+            # If the category does not exist, display the default "All" products view
+            selected_category = None
+
+    # Filter products based on the selected category
+    if selected_category:
+        products = Product.objects.filter(category=selected_category)
+    else:
+        products = Product.objects.all()
+
+    return render(request, 'products/product_list.html', {
+        'products': products,
+        'categories': categories,
+        'selected_category': selected_category,
+    })
 
 def order_product(request):
     product_id = request.GET.get('product_id')

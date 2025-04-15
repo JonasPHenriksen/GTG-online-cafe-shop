@@ -2,7 +2,7 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.http import JsonResponse
 from .forms import OrderForm
 from .models import Product, Order, OrderItem, Category
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_http_methods
 
 def home(request):
     return render(request, 'products/home.html')  
@@ -19,7 +19,6 @@ def product_list(request):
         try:
             selected_category = Category.objects.get(id=category_id)
         except Category.DoesNotExist:
-            # If the category does not exist, display the default "All" products view
             selected_category = None
 
     # Filter products based on the selected category
@@ -28,8 +27,13 @@ def product_list(request):
     else:
         products = Product.objects.all()
 
+    # Separate products into "Drinks" and "Others"
+    drinks = products.filter(category__name='Drinks')
+    others = products.exclude(category__name='Drinks')
+
     return render(request, 'products/product_list.html', {
-        'products': products,
+        'drinks': drinks,
+        'others': others,
         'categories': categories,
         'selected_category': selected_category,
     })
@@ -70,6 +74,19 @@ def add_to_basket(request, product_id):
 
     return JsonResponse({'success': True, 'message': 'Product added to basket!', 'quantity': request.session['basket'][str(product.id)]})
 
+@require_http_methods(['POST'])
+def remove_from_basket(request, product_id):
+    # Initialize the basket in the session if it doesn't exist
+    if 'basket' not in request.session:
+        request.session['basket'] = {}
+
+    # Remove the product from the basket
+    if str(product_id) in request.session['basket']:
+        del request.session['basket'][str(product_id)]
+        request.session.modified = True
+
+    return redirect('view_basket')
+
 def view_basket(request):
     basket = request.session.get('basket', {})
     basket_items = []
@@ -78,10 +95,9 @@ def view_basket(request):
     # Retrieve product details for each item in the basket
     for product_id, quantity in basket.items():
         product = get_object_or_404(Product, id=product_id)
-        basket_items.append({'product': product, 'quantity': quantity})
-        
-        # Convert product price to float and calculate total amount
-        total_amount += float(product.price) * quantity  # Convert to float
+        total_price = float(product.price) * quantity
+        basket_items.append({'product': product, 'quantity': quantity, 'total_price': total_price})
+        total_amount += total_price
 
     return render(request, 'products/basket.html', {
         'basket_items': basket_items,

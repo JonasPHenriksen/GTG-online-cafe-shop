@@ -76,9 +76,25 @@
 </head>
 <body>
     <h1>Product Catalog</h1>
+
+    <!-- Category Dropdown Form -->
+    <div class="container">
+        <form method="get" action="">
+            <select name="category" onchange="this.form.submit()">
+                <option value="" {% if not selected_category %}selected{% endif %}>All</option>
+                {% for category in categories %}
+                    <option value="{{ category.id }}" {% if selected_category and category.id == selected_category.id %}selected{% endif %}>
+                        {{ category.name }}
+                    </option>
+                {% endfor %}
+            </select>       
+        </form>
+    </div>
+
     <a href="{% url 'view_basket' %}" style="position: fixed; top: 20px; right: 20px; font-size: 24px;">
         <i class="fas fa-shopping-basket"></i>
     </a>
+
     <div class="container">
         <div class="product-grid">
             {% for product in products %}

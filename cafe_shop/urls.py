@@ -19,6 +19,7 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
 from products.views import home, add_to_basket, view_basket, place_order
+from django.contrib.auth import views as auth_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -26,9 +27,11 @@ urlpatterns = [
     path('add_to_basket/<int:product_id>/', add_to_basket, name='add_to_basket'),  
     path('basket/', view_basket, name='basket'),
     path('place_order/', place_order, name='place_order'),
-    path('', home, name='home'),  
-    path('view_basket/', view_basket, name='view_basket'),  # Ensure this line exists
-]
+    path('', home, name='home'),
+    path('view_basket/', view_basket, name='view_basket'),
+    path('accounts/login/', auth_views.LoginView.as_view(template_name='products/login.html'), name='login'),
+    path('logout/', auth_views.LogoutView.as_view(next_page='home'), name='logout'),
+    ]
 
 
 if settings.DEBUG:

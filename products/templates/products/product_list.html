@@ -161,48 +161,41 @@
     <script>
         $(document).ready(function() {
             $('.add-to-basket-form').on('submit', function(event) {
-                event.preventDefault(); // Prevent the default form submission
+                event.preventDefault(); 
     
                 var form = $(this);
                 var url = form.attr('action');
-                var data = form.serialize(); // Serialize the form data
+                var data = form.serialize(); 
     
                 $.post(url, data, function(response) {
-                    // Handle the response here
-                    alert('Product added to basket!'); // You can customize this
-                    // Optionally update the basket count or other UI elements here
+                    alert('Product added to basket!');
                 }).fail(function() {
                     alert('Error adding product to basket.');
                 });
             });
     
-            // Open the popup when the "Add to Basket" button is clicked
             $('.open-popup').click(function() {
                 var productId = $(this).data('product-id');
                 $('#popup-' + productId).css('display', 'block');
             });
     
-            // Close the popup when the close button is clicked
             $('.close-popup').click(function() {
                 var productId = $(this).closest('.popup').attr('id').replace('popup-', '');
                 $('#popup-' + productId).css('display', 'none');
             });
     
-            // Handle the form submission for adding drinks to the basket
             $('.add-to-basket-form').on('submit', function(event) {
-                event.preventDefault(); // Prevent the default form submission
+                event.preventDefault(); 
     
                 var form = $(this);
                 var url = form.attr('action');
-                var data = form.serialize(); // Serialize the form data
+                var data = form.serialize(); 
     
                 $.post(url, data, function(response) {
 
-                    // Close the popup
                     var productId = form.closest('.popup').attr('id').replace('popup-', '');
                     $('#popup-' + productId).css('display', 'none');
     
-                    // Update the basket total
                     updateBasketTotal();
                 }).fail(function() {
                     alert('Error adding product to basket.');
@@ -210,9 +203,7 @@
             });
     
             function updateBasketTotal() {
-                // Retrieve the basket items from the server
                 $.get('{% url "view_basket" %}', function(data) {
-                    // Update the total amount display
                     $('.total-amount').text('Total: $' + data.total_amount.toFixed(2));
                 });
             }

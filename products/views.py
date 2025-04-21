@@ -150,7 +150,8 @@ def place_order(request):
                 order = Order.objects.create(
                     user=request.user.username, 
                     name=order_name,  
-                    status='CREATED' 
+                    status='CREATED',
+                    payment_method='NONE', 
                 )
 
                 for product_id_and_size, item_data in basket.items():

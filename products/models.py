@@ -23,10 +23,18 @@ class Order(models.Model):
         ('PAID', 'Paid'),
     ]
 
+    PAYMENT_CHOICES = [
+        ('VIACARD', 'ViaCard'),
+        ('CREDITCARD', 'CreditCard'),
+        ('MOBILEPAY', 'MobilePay'),
+        ('NONE', 'None'),
+    ]
+
     user = models.CharField(max_length=150)
     name = models.CharField(max_length=200)
     created_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='CREATED')
+    payment_method = models.CharField(max_length=20, choices=PAYMENT_CHOICES, default='NONE')
 
     def __str__(self):
         return f"Order {self.id} by {self.user}"

@@ -71,6 +71,34 @@
             width: 50px;
             margin: 10px 0;
         }
+        .popup {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0,0,0,0.4);
+        }
+
+        .popup-content {
+        background-color: #fff;
+        margin: 10% auto;
+        padding: 20px;
+        border-radius: 8px;
+        width: 300px;
+        position: relative;
+        }
+
+        .close-popup {
+        position: absolute;
+        top: 8px;
+        right: 12px;
+        font-size: 24px;
+        cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -93,6 +121,11 @@
     <a href="{% url 'view_basket' %}" style="position: fixed; top: 20px; right: 20px; font-size: 24px;">
         <i class="fas fa-shopping-basket"></i>
     </a>
+
+    <form method="post" action="{% url 'logout' %}" style="position: fixed; top: 20px; left: 20px; font-size: 24px;">
+        {% csrf_token %}
+        <button type="submit">Logout</button>
+      </form>
 
     <div class="container">
         <div class="product-grid">
@@ -121,23 +154,22 @@
                     <p class="price">Price: ${{ product.price }}</p>
                     <img src="{{ product.image.url }}" alt="{{ product.name }}">
                     <button class="order-button open-popup" data-product-id="{{ product.id }}">Add to Basket</button>
-                    <!-- Popup for Drinks -->
-                    <div class="popup" id="popup-{{ product.id }}">
-                        <div class="popup-content">
-                            <span class="close-popup">&times;</span>
-                            <h3>Add {{ product.name }} to Basket</h3>
-                            <form class="add-to-basket-form" action="{% url 'add_to_basket' product.id %}" method="post">
-                                {% csrf_token %}
-                                <label for="size">Size:</label>
-                                <select name="size" id="size">
-                                    <option value="small">Small (+$0.50)</option>
-                                    <option value="medium">Medium (+$1.00)</option>
-                                    <option value="large">Large (+$1.50)</option>
-                                </select>
-                                <input type="number" name="quantity" class="quantity-input" value="1" min="1">
-                                <button type="submit" class="order-button">Add to Basket</button>
-                            </form>
-                        </div>
+                </div>
+                <div class="popup" id="popup-{{ product.id }}">
+                    <div class="popup-content">
+                        <span class="close-popup">&times;</span>
+                        <h3>Add {{ product.name }} to Basket</h3>
+                        <form class="add-to-basket-form" action="{% url 'add_to_basket' product.id %}" method="post">
+                            {% csrf_token %}
+                            <label for="size">Size:</label>
+                            <select name="size" id="size">
+                                <option value="small">Small (+$0.50)</option>
+                                <option value="medium">Medium (+$1.00)</option>
+                                <option value="large">Large (+$1.50)</option>
+                            </select>
+                            <input type="number" name="quantity" class="quantity-input" value="1" min="1">
+                            <button type="submit" class="order-button">Add to Basket</button>
+                        </form>
                     </div>
                 </div>
             {% endfor %}
@@ -160,30 +192,23 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         $(document).ready(function() {
-            $('.add-to-basket-form').on('submit', function(event) {
-                event.preventDefault(); 
+            $('.open-popup').on('click', function () {
+                var productId = $(this).data('product-id');
+                $('#popup-' + productId).fadeIn(200);
+            });
     
-                var form = $(this);
-                var url = form.attr('action');
-                var data = form.serialize(); 
+            $('.close-popup').on('click', function () {
+                $(this).closest('.popup').fadeOut(200);
+            });
     
-                $.post(url, data, function(response) {
-                    alert('Product added to basket!');
-                }).fail(function() {
-                    alert('Error adding product to basket.');
+            $(window).on('click', function (e) {
+                $('.popup').each(function () {
+                    if (e.target === this) {
+                        $(this).fadeOut(200);
+                    }
                 });
             });
     
-            $('.open-popup').click(function() {
-                var productId = $(this).data('product-id');
-                $('#popup-' + productId).css('display', 'block');
-            });
-    
-            $('.close-popup').click(function() {
-                var productId = $(this).closest('.popup').attr('id').replace('popup-', '');
-                $('#popup-' + productId).css('display', 'none');
-            });
-    
             $('.add-to-basket-form').on('submit', function(event) {
                 event.preventDefault(); 
     
@@ -192,11 +217,14 @@
                 var data = form.serialize(); 
     
                 $.post(url, data, function(response) {
-
-                    var productId = form.closest('.popup').attr('id').replace('popup-', '');
-                    $('#popup-' + productId).css('display', 'none');
+                    var popup = form.closest('.popup');
+                    if (popup.length) {
+                        popup.fadeOut(200);
+                    }
     
+                    alert('Product added to basket!');
                     updateBasketTotal();
+    
                 }).fail(function() {
                     alert('Error adding product to basket.');
                 });

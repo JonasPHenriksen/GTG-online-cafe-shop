@@ -21,11 +21,13 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-wv+yl3^hg%h0r!!c=atd^8%89m^$of^!mbut-6275572z-m)y&'
+# This project is a school exercise, set up for local development only.
+# The secret key and debug mode come from environment variables, so no real key
+# lives in this repository. Without them it runs with a throwaway development key
+# and debug on, which is fine on your own machine and never fine on a server.
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-local-development-only')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DJANGO_DEBUG', '1') == '1'
 
 ALLOWED_HOSTS = []
 
